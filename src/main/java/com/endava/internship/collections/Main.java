@@ -11,7 +11,7 @@ public class Main {
             public int compare(Student student1, Student student2) {
                 int compare = -student1.getName().compareTo(student2.getName());
 
-                if(compare != 0) {
+                if (compare != 0) {
                     return compare;
                 }
 
@@ -34,10 +34,6 @@ public class Main {
         students.put(new Student("Simlih Ilia", LocalDate.of(2002, 8, 2), "CEITI"), 9);
         System.out.println(students);
         System.out.println(students.size());
-        System.out.println(student1.getName() + " " + students.get(null));
-        System.out.println(students + "\n" + students.size());
-        students.clear();
-        System.out.println(students + "\n" + students.size());
-        System.out.println(students.containsValue(3));
+        System.out.println(student1.equals(new Student("Ivanov Victor", LocalDate.of(1994, 4, 3), "UTM")));
     }
 }

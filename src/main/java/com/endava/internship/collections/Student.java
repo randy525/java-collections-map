@@ -2,11 +2,8 @@ package com.endava.internship.collections;
 
 import java.time.LocalDate;
 
-/**
- * The class that defines the element that will be contained by your collection
- */
-public class Student implements Comparable<Student>
-{
+
+public class Student implements Comparable<Student> {
     private String name;
     private LocalDate dateOfBirth;
     private String details;
@@ -17,19 +14,52 @@ public class Student implements Comparable<Student>
         this.details = details;
     }
 
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
-    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
 
-    public String getDetails() { return details; }
+    public String getDetails() {
+        return details;
+    }
 
     @Override
     public int compareTo(Student otherStudent) {
         int compareResult = name.compareTo(otherStudent.name);
-        if(compareResult != 0) {
+        if (compareResult != 0) {
             return compareResult;
         }
         return dateOfBirth.compareTo(otherStudent.dateOfBirth);
+    }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        Student otherStudent;
+
+        if (obj instanceof Student) {
+            otherStudent = (Student) obj;
+        } else {
+            return false;
+        }
+
+        if (otherStudent == null) {
+            return false;
+        }
+
+        if (this == otherStudent) {
+            return true;
+        }
+
+        if (this.name.equals(otherStudent.name)
+                && this.dateOfBirth.equals(otherStudent.dateOfBirth)
+                && this.details.equals(otherStudent.details)) {
+            return true;
+        }
+        return false;
     }
 
     @Override

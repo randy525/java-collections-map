@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
-    
+
     static class Entry<K, V> implements Map.Entry<K, V> {
 
         private final K key;
@@ -51,13 +51,13 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
         comparator = null;
     }
 
-    public StudentMap(Comparator<? super  K> comparator) {
+    public StudentMap(Comparator<? super K> comparator) {
         size = 0;
         this.comparator = comparator;
     }
 
     private int compare(K key1, K key2) {
-        if(key1 == null && key2 == null) {
+        if (key1 == null && key2 == null) {
             return 0;
         } else {
             if (key1 == null) {
@@ -67,7 +67,7 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
             }
         }
 
-        if(comparator == null) {
+        if (comparator == null) {
             Comparable<? super K> comparableKey = (Comparable<? super K>) key1;
             return comparableKey.compareTo(key2);
         } else {
@@ -79,22 +79,19 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
         Entry<K, V> currentNode = root;
         int compareResult = compare((K) key, currentNode.key);
         try {
-            if(compareResult != 0) {
-                do {
-                    compareResult = compare((K) key, currentNode.key);
-                    if(compareResult > 0) {
-                        if(currentNode.right == null) {
-                            return null;
-                        }
-                        currentNode = currentNode.right;
-                    } else
-                    if(compareResult < 0) {
-                        if(currentNode.left == null) {
-                            return null;
-                        }
-                        currentNode = currentNode.left;
+            while (compareResult != 0) {
+                compareResult = compare((K) key, currentNode.key);
+                if (compareResult > 0) {
+                    if (currentNode.right == null) {
+                        return null;
                     }
-                } while(compareResult != 0);
+                    currentNode = currentNode.right;
+                } else if (compareResult < 0) {
+                    if (currentNode.left == null) {
+                        return null;
+                    }
+                    currentNode = currentNode.left;
+                }
             }
         } catch (ClassCastException e) {
             System.out.println(e);
@@ -125,7 +122,7 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     @Override
     public V get(Object key) {
         Entry<K, V> foundEntry = search(key);
-        if(foundEntry != null) {
+        if (foundEntry != null) {
             return foundEntry.value;
         }
         return null;
@@ -133,38 +130,40 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
 
     @Override
     public V put(K key, V value) {
-        if(root == null) {
+        if (root == null) {
             root = new Entry<>(key, value);
             size++;
         } else {
             Entry<K, V> currentNode = root;
-                do {
-                    int compareResult = compare(currentNode.key, key);
-                    if (compareResult > 0) {
-                        if (currentNode.left == null) {
-                            currentNode.left = new Entry<>(key, value);
-                            currentNode.left.parent = currentNode;
-                            size++;
-                            return currentNode.left.value;
-                        }
-                        currentNode = currentNode.left;
+            do {
+                int compareResult = compare(currentNode.key, key);
+                if (compareResult > 0) {
+                    if (currentNode.left == null) {
+                        currentNode.left = new Entry<>(key, value);
+                        currentNode.left.parent = currentNode;
+                        size++;
+                        return currentNode.left.value;
                     } else {
-                        if (compareResult < 0) {
-                            if (currentNode.right == null) {
-                                currentNode.right = new Entry<>(key, value);
-                                currentNode.right.parent = currentNode;
-                                size++;
-                                return currentNode.right.value;
-                            }
-                            currentNode = currentNode.right;
-                        } else {
-                            V v = currentNode.value;
-                            currentNode.value = value;
-                            return v;
-                        }
+                        currentNode = currentNode.left;
                     }
-                } while (true);
-            }
+                } else {
+                    if (compareResult < 0) {
+                        if (currentNode.right == null) {
+                            currentNode.right = new Entry<>(key, value);
+                            currentNode.right.parent = currentNode;
+                            size++;
+                            return currentNode.right.value;
+                        } else {
+                            currentNode = currentNode.right;
+                        }
+                    } else {
+                        V oldValue = currentNode.value;
+                        currentNode.value = value;
+                        return oldValue;
+                    }
+                }
+            } while (currentNode.left != null || currentNode.right != null);
+        }
         return null;
     }
 
@@ -172,7 +171,9 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     public V remove(Object key) {
         Entry<K, V> removingNode = search(key);
 
-        if(removingNode == null) return null;
+        if (removingNode == null) {
+            return null;
+        }
 
         V oldValue = removingNode.value;
 
@@ -182,20 +183,20 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
         int leftSubTreeSize = 0;
         int rightSubTreeSize = 0;
 
-        if(leftNode != null) {
+        if (leftNode != null) {
             while (leftNode.right != null) {
                 leftNode = leftNode.right;
                 leftSubTreeSize++;
             }
         }
-        if(rightNode != null) {
+        if (rightNode != null) {
             while (rightNode.left != null) {
                 rightNode = rightNode.left;
                 rightSubTreeSize++;
             }
         }
-        if(rightNode == null && leftNode == null) {
-            if(removingNode.parent.right == removingNode) {
+        if (rightNode == null && leftNode == null) {
+            if (removingNode.parent.right == removingNode) {
                 removingNode.parent.right = null;
             } else {
                 removingNode.parent.left = null;
@@ -204,26 +205,26 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
             return oldValue;
         }
 
-        if(leftSubTreeSize > rightSubTreeSize && leftNode != null) {
-            if(leftNode.parent.left == leftNode) {
+        if (leftSubTreeSize > rightSubTreeSize && leftNode != null) {
+            if (leftNode.parent.left == leftNode) {
                 leftNode.parent.left = leftNode.right;
             }
 
             leftNode.parent.right = leftNode.left;
 
-            if(leftNode.left != null) {
+            if (leftNode.left != null) {
                 System.out.println(leftNode);
                 leftNode.left.parent = leftNode.parent;
             }
         } else {
-            if(leftSubTreeSize < rightSubTreeSize || leftNode == null) {
-                if(rightNode.parent.right == rightNode) {
+            if (leftSubTreeSize < rightSubTreeSize || leftNode == null) {
+                if (rightNode.parent.right == rightNode) {
                     rightNode.parent.right = rightNode.right;
                 }
 
                 rightNode.parent.left = rightNode.right;
 
-                if(rightNode.right != null) {
+                if (rightNode.right != null) {
                     rightNode.right.parent = rightNode.parent;
                 }
 
@@ -235,23 +236,23 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
         leftNode.right = removingNode.right;
         leftNode.parent = removingNode.parent;
 
-        if(removingNode.left != null) {
+        if (removingNode.left != null) {
             removingNode.left.parent = leftNode;
         }
 
-        if(removingNode.right != null) {
+        if (removingNode.right != null) {
             removingNode.right.parent = leftNode;
         }
 
-        if(removingNode.parent != null) {
-            if(removingNode.parent.right == removingNode) {
+        if (removingNode.parent != null) {
+            if (removingNode.parent.right == removingNode) {
                 removingNode.parent.right = leftNode;
             } else {
                 removingNode.parent.left = leftNode;
             }
         }
 
-        if(removingNode == root)  {
+        if (removingNode == root) {
             root = leftNode;
         }
 
@@ -261,9 +262,9 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
-        for(Map.Entry<? extends K, ? extends V> e: m.entrySet()) {
-            put(e.getKey(), e.getValue());
+    public void putAll(Map<? extends K, ? extends V> map) {
+        for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
+            put(entry.getKey(), entry.getValue());
         }
     }
 
@@ -277,7 +278,7 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     public Set<K> keySet() {
         return entrySet()
                 .stream()
-                .map(currentNode->currentNode.getKey())
+                .map(currentNode -> currentNode.getKey())
                 .collect(Collectors.toSet());
     }
 
@@ -285,7 +286,7 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     public Collection<V> values() {
         return entrySet()
                 .stream()
-                .map(currentNode->currentNode.getValue())
+                .map(currentNode -> currentNode.getValue())
                 .collect(Collectors.toList());
     }
 
@@ -296,14 +297,14 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
 
         Entry<K, V> currentNode = root;
 
-        if(currentNode == null) {
+        if (currentNode == null) {
             return entriesSet; //fixed
         }
 
         helperStack.push(currentNode);
 
-        while(!helperStack.isEmpty()) {
-            if(currentNode != null) {
+        while (!helperStack.isEmpty()) {
+            if (currentNode != null) {
                 helperStack.push(currentNode);
                 currentNode = currentNode.left;
             } else {
@@ -322,19 +323,19 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     }
 
     private String toString(Entry<K, V> tRoot) {
-        if(tRoot == null) {
+        if (tRoot == null) {
             return null;
         }
 
-        if(tRoot.left == null && tRoot.right == null) {
+        if (tRoot.left == null && tRoot.right == null) {
             return tRoot.toString();
         }
 
-        if(tRoot.left == null) {
+        if (tRoot.left == null) {
             return tRoot + toString(tRoot.right);
         }
 
-        if(tRoot.right == null) {
+        if (tRoot.right == null) {
             return toString(tRoot.left) + tRoot;
         }
 
