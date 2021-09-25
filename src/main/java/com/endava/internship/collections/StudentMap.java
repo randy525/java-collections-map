@@ -76,6 +76,10 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     }
 
     private Entry<K, V> search(Object key) {
+        if (root == null) {
+            return null;
+        }
+
         Entry<K, V> currentNode = root;
         int compareResult = compare((K) key, currentNode.key);
         try {
@@ -133,38 +137,40 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
         if (root == null) {
             root = new Entry<>(key, value);
             size++;
+            return root.value;
         } else {
             Entry<K, V> currentNode = root;
+            Entry<K, V> previousNode;
+            boolean isRightSide = false;
             do {
                 int compareResult = compare(currentNode.key, key);
+                previousNode = currentNode;
                 if (compareResult > 0) {
-                    if (currentNode.left == null) {
-                        currentNode.left = new Entry<>(key, value);
-                        currentNode.left.parent = currentNode;
-                        size++;
-                        return currentNode.left.value;
-                    } else {
-                        currentNode = currentNode.left;
-                    }
+                    currentNode = currentNode.left;
+                    isRightSide = false;
                 } else {
                     if (compareResult < 0) {
-                        if (currentNode.right == null) {
-                            currentNode.right = new Entry<>(key, value);
-                            currentNode.right.parent = currentNode;
-                            size++;
-                            return currentNode.right.value;
-                        } else {
-                            currentNode = currentNode.right;
-                        }
+                        currentNode = currentNode.right;
+                        isRightSide = true;
                     } else {
                         V oldValue = currentNode.value;
                         currentNode.value = value;
                         return oldValue;
                     }
                 }
-            } while (currentNode.left != null || currentNode.right != null);
+            } while (currentNode != null);
+
+            currentNode = new Entry<>(key, value);
+            currentNode.parent = previousNode;
+            if (isRightSide) {
+               previousNode.right = currentNode;
+            } else {
+                previousNode.left = currentNode;
+            }
+            size++;
+
+            return currentNode.value;
         }
-        return null;
     }
 
     @Override
@@ -196,10 +202,14 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
             }
         }
         if (rightNode == null && leftNode == null) {
-            if (removingNode.parent.right == removingNode) {
-                removingNode.parent.right = null;
+            if (removingNode.parent != null) {
+                if (removingNode.parent.right == removingNode) {
+                    removingNode.parent.right = null;
+                } else {
+                    removingNode.parent.left = null;
+                }
             } else {
-                removingNode.parent.left = null;
+                root = null;
             }
             size--;
             return oldValue;
@@ -278,7 +288,7 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     public Set<K> keySet() {
         return entrySet()
                 .stream()
-                .map(currentNode -> currentNode.getKey())
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
 
