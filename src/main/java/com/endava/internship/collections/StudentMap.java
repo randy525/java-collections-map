@@ -215,7 +215,7 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
             return oldValue;
         }
 
-        if (leftSubTreeSize > rightSubTreeSize && leftNode != null) {
+        if (leftSubTreeSize >= rightSubTreeSize && leftNode != null) {
             if (leftNode.parent.left == leftNode) {
                 leftNode.parent.left = leftNode.right;
             }
@@ -223,23 +223,20 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
             leftNode.parent.right = leftNode.left;
 
             if (leftNode.left != null) {
-                System.out.println(leftNode);
                 leftNode.left.parent = leftNode.parent;
             }
         } else {
-            if (leftSubTreeSize < rightSubTreeSize || leftNode == null) {
-                if (rightNode.parent.right == rightNode) {
-                    rightNode.parent.right = rightNode.right;
-                }
-
-                rightNode.parent.left = rightNode.right;
-
-                if (rightNode.right != null) {
-                    rightNode.right.parent = rightNode.parent;
-                }
-
-                leftNode = rightNode;
+            if (rightNode.parent.right == rightNode) {
+                rightNode.parent.right = rightNode.right;
             }
+
+            rightNode.parent.left = rightNode.right;
+
+            if (rightNode.right != null) {
+                rightNode.right.parent = rightNode.parent;
+            }
+
+            leftNode = rightNode;
         }
 
         leftNode.left = removingNode.left;
@@ -296,7 +293,7 @@ public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
     public Collection<V> values() {
         return entrySet()
                 .stream()
-                .map(currentNode -> currentNode.getValue())
+                .map(Map.Entry<K, V>::getValue)
                 .collect(Collectors.toList());
     }
 

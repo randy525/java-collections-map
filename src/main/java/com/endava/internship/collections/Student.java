@@ -4,9 +4,9 @@ import java.time.LocalDate;
 
 
 public class Student implements Comparable<Student> {
-    private String name;
-    private LocalDate dateOfBirth;
-    private String details;
+    private final String name;
+    private final LocalDate dateOfBirth;
+    private final String details;
 
     public Student(String name, LocalDate dateOfBirth, String details) {
         this.name = name;
@@ -43,10 +43,6 @@ public class Student implements Comparable<Student> {
         if (obj instanceof Student) {
             otherStudent = (Student) obj;
         } else {
-            return false;
-        }
-
-        if (otherStudent == null) {
             return false;
         }
 
