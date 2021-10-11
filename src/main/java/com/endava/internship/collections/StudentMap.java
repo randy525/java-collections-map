@@ -1,78 +1,352 @@
 package com.endava.internship.collections;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
-public class StudentMap implements Map<Student, Integer> {
+public class StudentMap<K extends Comparable<K>, V> implements Map<K, V> {
+
+    static class Entry<K, V> implements Map.Entry<K, V> {
+
+        private final K key;
+        private V value;
+
+        private Entry<K, V> left;
+        private Entry<K, V> right;
+        private Entry<K, V> parent;
+
+        public Entry(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        public K getKey() {
+            return key;
+        }
+
+        @Override
+        public V getValue() {
+            return value;
+        }
+
+        @Override
+        public V setValue(V value) {
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+
+        @Override
+        public String toString() {
+            return "{" + key + " = " + value + "}\n";
+        }
+    }
+
+    private Entry<K, V> root;
+    private int size;
+    private final Comparator<? super K> comparator;
+
+    public StudentMap() {
+        size = 0;
+        comparator = null;
+    }
+
+    public StudentMap(Comparator<? super K> comparator) {
+        size = 0;
+        this.comparator = comparator;
+    }
+
+    private int compare(K key1, K key2) {
+        if (key1 == null && key2 == null) {
+            return 0;
+        } else {
+            if (key1 == null) {
+                return -1;
+            } else if (key2 == null) {
+                return 1;
+            }
+        }
+
+        if (comparator == null) {
+            Comparable<? super K> comparableKey = (Comparable<? super K>) key1;
+            return comparableKey.compareTo(key2);
+        } else {
+            return comparator.compare(key1, key2);
+        }
+    }
+
+    private Entry<K, V> search(Object key) {
+        if (root == null) {
+            return null;
+        }
+
+        Entry<K, V> currentNode = root;
+        int compareResult = compare((K) key, currentNode.key);
+        try {
+            while (compareResult != 0) {
+                compareResult = compare((K) key, currentNode.key);
+                if (compareResult > 0) {
+                    if (currentNode.right == null) {
+                        return null;
+                    }
+                    currentNode = currentNode.right;
+                } else if (compareResult < 0) {
+                    if (currentNode.left == null) {
+                        return null;
+                    }
+                    currentNode = currentNode.left;
+                }
+            }
+        } catch (ClassCastException e) {
+            System.out.println(e);
+        }
+        return currentNode;
+    }
+
     @Override
     public int size() {
-        //TODO
-        return 0;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        //TODO
-        return false;
+        return root == null;
     }
 
     @Override
-    public boolean containsKey(Object o) {
-        //TODO
-        return false;
+    public boolean containsKey(Object key) {
+        return search(key) != null;
     }
 
     @Override
-    public boolean containsValue(Object o) {
-        //TODO
-        return false;
+    public boolean containsValue(Object value) {
+        return values().contains(value);
     }
 
     @Override
-    public Integer get(Object o) {
-        //TODO
+    public V get(Object key) {
+        Entry<K, V> foundEntry = search(key);
+        if (foundEntry != null) {
+            return foundEntry.value;
+        }
         return null;
     }
 
     @Override
-    public Integer put(Student student, Integer integer) {
-        //TODO
-        return null;
+    public V put(K key, V value) {
+        if (root == null) {
+            root = new Entry<>(key, value);
+            size++;
+            return root.value;
+        } else {
+            Entry<K, V> currentNode = root;
+            Entry<K, V> previousNode;
+            boolean isRightSide = false;
+            do {
+                int compareResult = compare(currentNode.key, key);
+                previousNode = currentNode;
+                if (compareResult > 0) {
+                    currentNode = currentNode.left;
+                    isRightSide = false;
+                } else {
+                    if (compareResult < 0) {
+                        currentNode = currentNode.right;
+                        isRightSide = true;
+                    } else {
+                        V oldValue = currentNode.value;
+                        currentNode.value = value;
+                        return oldValue;
+                    }
+                }
+            } while (currentNode != null);
+
+            currentNode = new Entry<>(key, value);
+            currentNode.parent = previousNode;
+            if (isRightSide) {
+               previousNode.right = currentNode;
+            } else {
+                previousNode.left = currentNode;
+            }
+            size++;
+
+            return currentNode.value;
+        }
     }
 
     @Override
-    public Integer remove(Object o) {
-        //TODO
-        return null;
+    public V remove(Object key) {
+        Entry<K, V> removingNode = search(key);
+
+        if (removingNode == null) {
+            return null;
+        }
+
+        V oldValue = removingNode.value;
+
+        Entry<K, V> leftNode = removingNode.left;
+        Entry<K, V> rightNode = removingNode.right;
+
+        int leftSubTreeSize = 0;
+        int rightSubTreeSize = 0;
+
+        if (leftNode != null) {
+            while (leftNode.right != null) {
+                leftNode = leftNode.right;
+                leftSubTreeSize++;
+            }
+        }
+        if (rightNode != null) {
+            while (rightNode.left != null) {
+                rightNode = rightNode.left;
+                rightSubTreeSize++;
+            }
+        }
+        if (rightNode == null && leftNode == null) {
+            if (removingNode.parent != null) {
+                if (removingNode.parent.right == removingNode) {
+                    removingNode.parent.right = null;
+                } else {
+                    removingNode.parent.left = null;
+                }
+            } else {
+                root = null;
+            }
+            size--;
+            return oldValue;
+        }
+
+        if (leftSubTreeSize >= rightSubTreeSize && leftNode != null) {
+            if (leftNode.parent.left == leftNode) {
+                leftNode.parent.left = leftNode.right;
+            }
+
+            leftNode.parent.right = leftNode.left;
+
+            if (leftNode.left != null) {
+                leftNode.left.parent = leftNode.parent;
+            }
+        } else {
+            if (rightNode.parent.right == rightNode) {
+                rightNode.parent.right = rightNode.right;
+            }
+
+            rightNode.parent.left = rightNode.right;
+
+            if (rightNode.right != null) {
+                rightNode.right.parent = rightNode.parent;
+            }
+
+            leftNode = rightNode;
+        }
+
+        leftNode.left = removingNode.left;
+        leftNode.right = removingNode.right;
+        leftNode.parent = removingNode.parent;
+
+        if (removingNode.left != null) {
+            removingNode.left.parent = leftNode;
+        }
+
+        if (removingNode.right != null) {
+            removingNode.right.parent = leftNode;
+        }
+
+        if (removingNode.parent != null) {
+            if (removingNode.parent.right == removingNode) {
+                removingNode.parent.right = leftNode;
+            } else {
+                removingNode.parent.left = leftNode;
+            }
+        }
+
+        if (removingNode == root) {
+            root = leftNode;
+        }
+
+        size--;
+
+        return oldValue;
     }
 
     @Override
-    public void putAll(Map<? extends Student, ? extends Integer> map) {
-        //TODO
+    public void putAll(Map<? extends K, ? extends V> map) {
+        for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override
     public void clear() {
-        //TODO
+        root = null;
+        size = 0;
     }
 
     @Override
-    public Set<Student> keySet() {
-        //TODO
-        return null;
+    public Set<K> keySet() {
+        return entrySet()
+                .stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
     }
 
     @Override
-    public Collection<Integer> values() {
-        //TODO
-        return null;
+    public Collection<V> values() {
+        return entrySet()
+                .stream()
+                .map(Map.Entry<K, V>::getValue)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Set<Entry<Student, Integer>> entrySet() {
-        //Ignore this for homework
-        throw new UnsupportedOperationException();
+    public Set<Map.Entry<K, V>> entrySet() {
+        Set<Map.Entry<K, V>> entriesSet = new LinkedHashSet<>();
+        Stack<Entry<K, V>> helperStack = new Stack<>();
+
+        Entry<K, V> currentNode = root;
+
+        if (currentNode == null) {
+            return entriesSet; //fixed
+        }
+
+        helperStack.push(currentNode);
+
+        while (!helperStack.isEmpty()) {
+            if (currentNode != null) {
+                helperStack.push(currentNode);
+                currentNode = currentNode.left;
+            } else {
+                currentNode = helperStack.pop();
+                entriesSet.add(currentNode);
+                currentNode = currentNode.right;
+            }
+        }
+
+        return entriesSet;
+    }
+
+    @Override
+    public String toString() {
+        return toString(root);
+    }
+
+    private String toString(Entry<K, V> tRoot) {
+        if (tRoot == null) {
+            return null;
+        }
+
+        if (tRoot.left == null && tRoot.right == null) {
+            return tRoot.toString();
+        }
+
+        if (tRoot.left == null) {
+            return tRoot + toString(tRoot.right);
+        }
+
+        if (tRoot.right == null) {
+            return toString(tRoot.left) + tRoot;
+        }
+
+        return toString(tRoot.left) + tRoot + toString(tRoot.right);
     }
 }
 
